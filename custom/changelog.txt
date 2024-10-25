@@ -1,0 +1,24 @@
+==========================================================================
+================ Custom Modules and Sections For OSTicket ================
+==========================================================================
+
+========================
+ver 1.0.2
+========================
+1. WO Ticket
+========================
+
+========================
+ver 1.0.1
+========================
+1. Custom module for showing attachments in Tickets section. Changes were made in following core files:
+    a. /bootstrap.php: included custom folder to include handler.
+    b. /include/staff/ticket-view.inc.php: added a tab for attachments and included the attachments module as content for the tab.
+========================
+
+========================
+ver 1.0.0
+========================
+1. Initial custom module handler and mini framework.
+2. First custom module for feedback form. No core file changes were needed.
+========================
