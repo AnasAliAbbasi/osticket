@@ -205,6 +205,7 @@ class Bootstrap {
         #Connect to the DB && get configuration from database
         $ferror=null;
         $options = array();
+        
         if (defined('DBSSLCA'))
             $options['ssl'] = array(
                 'ca' => DBSSLCA,
@@ -341,10 +342,10 @@ class Bootstrap {
 
     static function croak($message) {
         $msg = $message."\n\n".THISPAGE;
-        osTicket\Mail\Mailer::sendmail(ADMIN_EMAIL, 'osTicket Fatal Error', $msg,
-            sprintf('"osTicket Alerts"<%s>', ADMIN_EMAIL));
+        // osTicket\Mail\Mailer::sendmail(ADMIN_EMAIL, 'osTicket Fatal Error', $msg,
+        //     sprintf('"osTicket Alerts"<%s>', ADMIN_EMAIL));
         //Display generic error to the user
-        Http::response(500, "<b>Fatal Error:</b> Contact system administrator.");
+        Http::response(500, $msg);
     }
 }
 

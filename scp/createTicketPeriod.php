@@ -27,19 +27,19 @@ Parts of this script were inspired from jared@osTicket.com / ntozier@osTicket / 
 */
 
 $settings = array(
-  'dbHost' => '10.1.13.18',
+  'dbHost' => 'localhost',
   'dbTable' => 'sem_pmo.sem_faq', // Database.Table where FAQs are stored.
   'database' => 'sem_pmo',
-  'dbUser' => 'sem_user',
-  'dbPass' => 'sem123',
+  'dbUser' => 'root',
+  'dbPass' => 'anas1234',
   'categoryId' => 5, // The Category ID where Automator tickete FAQs are kept
   'topicId' => 18, // Created tickets are assigned to this topic.
   'subjectPrefix' => '[',
   'subjectSuffix' => ']',
   'reporterEmail' => 'pmo@sem-inc.com',
   'reporterName' => 'Ahmar',
-  'apiURL' => 'http://10.1.13.18/sem-pmo/api/http.php/tickets.json',
-  'apiKey' => 'FA752310B7687E90F1347AF792412584'
+  'apiURL' => 'http://127.0.0.1/osticket/api/http.php/tickets.json',
+  'apiKey' => '65417B8798F62B5697D13FC54C593414'
 );
 
 if (!isset($settings)) {

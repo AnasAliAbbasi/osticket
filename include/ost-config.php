@@ -41,10 +41,10 @@ define('ADMIN_EMAIL','ahmar.jafri@gmail.com');
 #
 define('DBTYPE','mysql');
 #  DBHOST can have comma separated hosts (e.g db1:6033,db2:6033)
-define('DBHOST','10.1.13.18');
+define('DBHOST','localhost');
 define('DBNAME','sem_pmo');
-define('DBUSER','sem_user');
-define('DBPASS','sem123');
+define('DBUSER','root');
+define('DBPASS','anas1234');
 
 # Database TCP/IP Connect Timeout (default: 3 seconds)
 # Timeout is important when DBHOST has multiple proxies to try
