@@ -38,7 +38,7 @@ function createTicket($subject, $message = null, $topicID = null, $additional_da
     function_exists('curl_version') or die('CURL support required');
     function_exists('json_encode') or die('JSON support required');
 
-    set_time_limit(30);
+    set_time_limit(120);
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $settings['apiURL']);
