@@ -74,6 +74,7 @@ function processWOTickets($settings, $woticketcondition)
 
     if (isValidArray($customdata)) {
         foreach ($customdata as $cs) {
+            echo "<pre>";print_r($cs);exit;
             
             $revision = 'No';
             $topicIds = $woticketcondition[$cs['_wo_saletype']][$cs['_repeat_flag']][$revision];
@@ -111,7 +112,7 @@ function setCustomData()
 function getDataFromDB($wo_no = '')
 {
     $fields = '_wo.WONumber  as won, _wo.UNIQ_KEY as uniq_key, _wo.SaleType as _wo_saletype, _wo.WOStatus as _wo_status, if(_wo.RepeatOrderFlag = \'Repeat\', "Yes", "No") as _repeat_flag, _wo.WorkOrderDate as _wo_create_date, _wo.StartDate as _wo_start_date, _wo.DueDate as _wo_due_date, _wo.ScheduledCompleteDate as _scheduled_complete_date, _wo.PlannedCompleteDate as _wo_complete_planned_date, _wo.ReleaseDate as _release_date, _wo.CompleteDate as _wo_complete_date, _wo.WOQty as _wo_quantity, _wo.WOCompleteQty as _wo_complete_quantity, _wo.WORemainingQty as _wo_balanace_quantity, _wd.Document_Folder as _utc_time, _wo.Customer as _cus_name, _wo.CustomerPONumber as _cus_po, _mi.ItemPartNo as _cus_pn, _mi.ItemRevision as _cus_pn_rev , _wo.TestRequiredFalg as _wo_test_flag';
-    $query = sprintf('SELECT * 
+    $query = sprintf('SELECT %1$s
                 FROM manex_work_orders AS _wo
                 INNER JOIN manex_items AS _mi ON _wo.UNIQ_KEY = _mi.UNIQ_KEY
                 INNER JOIN manex_work_order_documents AS _wd ON _wo.WONumber = _wd.WONumber
@@ -121,7 +122,9 @@ function getDataFromDB($wo_no = '')
                     WHERE topic_id = 20
                     GROUP BY wo_number
                     HAVING COUNT(*) = 1  -- Exclude work orders with more than one log
-                ) AS _wcl ON _wo.WONumber = _wcl.wo_number;', $fields);
+                ) AS _wcl ON _wo.WONumber = _wcl.wo_number
+                WHERE _wo.WOStatus NOT IN ("Cancel", "Closed")
+                AND _mi.ItemPartNo REGEXP "^(910|R910|940)";', $fields);
     
     $result = executeQuery($query);
     return getDataFromResultSet($result);
