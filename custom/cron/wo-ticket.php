@@ -15,21 +15,14 @@ $woticketcondition = array(
         'No' => array( /* RepeatOrderFlag */
             'No' => array( /* Revision */
                 20,
-                21,
-                22,
-                25
             ),
             'Yes' => array( /* Revision */
                 20,
-                21,
-                22
             )
         ),
         'Yes' => array( /* RepeatOrderFlag */
             'No' => array( /* Revision */
                 20,
-                21,
-                22
             ),
         )
     ),
@@ -37,17 +30,14 @@ $woticketcondition = array(
         'No' => array( /* RepeatOrderFlag */
             'No' => array( /* Revision */
                 20,
-                21
             ),
             'Yes' => array( /* Revision */
                 20,
-                21
             )
         ),
         'Yes' => array( /* RepeatOrderFlag */
             'No' => array( /* Revision */
                 20,
-                21
             ),
         )
     )
@@ -71,6 +61,8 @@ function processWOTickets($settings, $woticketcondition)
                 }
             }
         }
+    }else{
+        echo "No Work Orders Found";
     }
 }
 
