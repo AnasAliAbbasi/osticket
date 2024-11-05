@@ -81,6 +81,8 @@ function processWOTickets($settings, $woticketcondition)
 
     if (isValidArray($customdata)) {
         foreach ($customdata as $cs) {
+            echo "TOTAL ORDERS: ". (!empty($customdata) ? count($customdata) : 0 );
+            echo "<pre>";print_r($customdata);exit;
             $revision = 'No';
             $topicIds = $woticketcondition[$cs['_wo_saletype']][$cs['_repeat_flag']][$revision];
             foreach ($topicIds as $topicId) {
@@ -88,7 +90,7 @@ function processWOTickets($settings, $woticketcondition)
                     echo "test flag is empty" . $cs['won'];
                 }else{
                     $topicTitle = $settings['topicId'][$topicId];
-                    $ticketId = createTicket($subject . $cs['won'] . ' (' . $topicTitle . ')', $msg, $topicId, $cs);
+                    $ticketId = createTicket( 'Auto '.' (' . $topicTitle . ') '. $cs['won'] .' '. $cs['_custpn_revision'] , $msg, $topicId, $cs);
                     /* Insert In Log Table For Reference */
                     if ($ticketId) {
                         generateWOLog($ticketId, $topicId, $cs);
@@ -115,12 +117,31 @@ function setCustomData()
 
 
 function getDataFromDB($wo_no = '')
-{   $today = date('Y-m-d');
+{  
+    $today = date('Y-m-d');
     $fields = '_wo.WONumber  as won, _wo.UNIQ_KEY as uniq_key, _wo.SaleType as _wo_saletype, _wo.WOStatus as _wo_status, if(_wo.RepeatOrderFlag = \'Repeat\', "Yes", "No") as _repeat_flag, _wo.WorkOrderDate as _wo_create_date, _wo.StartDate as _wo_start_date, _wo.DueDate as _wo_due_date, _wo.ScheduledCompleteDate as _scheduled_complete_date, _wo.PlannedCompleteDate as _wo_complete_planned_date, _wo.ReleaseDate as _release_date, _wo.CompleteDate as _wo_complete_date, _wo.WOQty as _wo_quantity, _wo.WOCompleteQty as _wo_complete_quantity, _wo.WORemainingQty as _wo_balanace_quantity, _wd.Document_Folder as _utc_time, _wo.Customer as _cus_name, _wo.CustomerPONumber as _cus_po, _mi.ItemPartNo as _cus_pn, _mi.ItemRevision as _cus_pn_rev , CONCAT(_mi.ItemPartNo , " " , _mi.ItemRevision) as _custpn_revision , _wo.TestRequiredFalg as _wo_test_flag , if(_wo.SaleType = \'Consignmnt\', "Yes", "No") as _is_consigned , if(_wo.TestRequiredFalg = \'Yes\', "Yes", "No") as _test_flag , _wo.Lead_Requirement as _lead_requirement , _wo.Clean_Processing as _clean_processing';
-    $query = sprintf('SELECT %1$s FROM manex_work_orders AS _wo INNER JOIN manex_items AS _mi ON _wo.UNIQ_KEY = _mi.UNIQ_KEY INNER JOIN manex_work_order_documents AS _wd ON _wo.WONumber = _wd.WONumber WHERE _wo.WOStatus NOT IN ("Cancel", "Closed") AND _mi.ItemPartNo REGEXP "^(910|R910|940)" AND _wo.WONumber IN ( SELECT wo_number FROM _wo_cron_logs GROUP BY wo_number HAVING COUNT(CASE WHEN topic_id = 20 THEN 1 END) = 1 AND COUNT(CASE WHEN topic_id != 20 THEN 1 END) = 0 ) ORDER BY _wo.WONumber;', $fields);
-    
+    $query = sprintf('SELECT %1$s FROM manex_work_orders AS _wo
+    INNER JOIN manex_items AS _mi ON _wo.UNIQ_KEY = _mi.UNIQ_KEY
+    INNER JOIN manex_work_order_documents AS _wd ON _wo.WONumber = _wd.WONumber
+    WHERE _wo.WOStatus NOT IN ("Cancel", "Closed")
+    AND _mi.ItemPartNo REGEXP "^(910|R910|940)"
+    AND _wo.WONumber IN 
+    ( 
+        select wo_number
+        from _wo_cron_logs 
+        where WO_Number in ( 
+            select wonumber 
+            from manex_work_order_documents 
+            where DATE(UpdatedUTC) = "%2$s") 
+        group by wo_number 
+        having count(*)=1
+        ) 
+    AND DATE(_wd.UpdatedUTC) = "%2$s"
+    ORDER BY _wo.WONumber;', $fields , $today);
+
     $result = executeQuery($query);
     return getDataFromResultSet($result);
+
 }
 
 function getTechReviewTicketsOrders() {
