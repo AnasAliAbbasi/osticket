@@ -12,7 +12,7 @@ $settings = array(
   'reporterEmail' => 'pmo@sem-inc.com',
   'reporterName' => 'Ahmar',
   'apiURL' => 'http://127.0.0.1/osticket/api/http.php/tickets.json',
-  'apiKey' => '379D7F509EB0939647754920A50E725D'
+  'apiKey' => '1C8C5DDD60233047718CCD69900C919F'
 );
 
 define('AXEVERSION', '1.0.1');

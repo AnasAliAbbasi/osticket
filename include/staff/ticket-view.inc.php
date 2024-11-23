@@ -1066,8 +1066,12 @@ $tcount = $ticket->getThreadEntries($types) ? $ticket->getThreadEntries($types)-
     }
     ?>
     <!-- AZ Added On July 02, 2024 -->
-    <li><a id="attachments-tab" href="#attachments"><?php
-            echo sprintf(__('Attachments (<span id="axeattachcount">%d</span>)'), 0); ?></a></li>
+    <li>
+        <a id="attachments-tab" href="#attachments">
+        <?php
+            echo sprintf(__('Attachments (<span id="axeattachcount">%d</span>)'), 0); ?>
+        </a>
+    </li>
             <!-- AZ Added On July 02, 2024 -->
 
 </ul>

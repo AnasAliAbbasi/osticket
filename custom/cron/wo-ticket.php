@@ -14,14 +14,17 @@ $woticketcondition = array(
     'Turnkey' => array( /* SaleType */
         'No' => array( /* RepeatOrderFlag */
             'No' => array( /* Revision */
+                25,
                 20,
             ),
             'Yes' => array( /* Revision */
+                25,
                 20,
             )
         ),
         'Yes' => array( /* RepeatOrderFlag */
             'No' => array( /* Revision */
+                25,
                 20,
             ),
         )
@@ -29,18 +32,40 @@ $woticketcondition = array(
     'Consignmnt' => array( /* SaleType */
         'No' => array( /* RepeatOrderFlag */
             'No' => array( /* Revision */
+                25,
                 20,
             ),
             'Yes' => array( /* Revision */
+                25,
                 20,
             )
         ),
         'Yes' => array( /* RepeatOrderFlag */
             'No' => array( /* Revision */
+                25,
                 20,
             ),
         )
-    )
+    ),
+    'RMA' => array( /* SaleType */
+        'No' => array( /* RepeatOrderFlag */
+            'No' => array( /* Revision */
+                25,
+                20,
+            ),
+            'Yes' => array( /* Revision */
+                25,
+                20,
+            )
+        ),
+        'Yes' => array( /* RepeatOrderFlag */
+            'No' => array( /* Revision */
+                25,
+                20,
+            ),
+        )
+    ),
+
 );
 
 processWOTickets($settings, $woticketcondition);
@@ -54,13 +79,17 @@ function processWOTickets($settings, $woticketcondition)
             $revision = 'No';
             $topicIds = $woticketcondition[$cs['_wo_saletype']][$cs['_repeat_flag']][$revision];
             foreach ($topicIds as $topicId) {
-                $document = getDocumentAvailable($cs['won']);
-                $cs['_utc_time'] = (!empty($document) ? $document[0]['Document_Folder'] : 'Docment Not Available Now' ); 
-                $topicTitle = $settings['topicId'][$topicId];
-                $ticketId = createTicket( 'Auto '.' (' . $topicTitle . ') '. $cs['won'] .' '. $cs['_custpn_revision'] , $msg, $topicId, $cs);
-                /* Insert In Log Table For Reference */
-                if ($ticketId) {
-                    generateWOLog($ticketId, $topicId, $cs);
+                if($topicId == 25 && $cs['_rma_flag'] == 1){
+                    echo "RMA flag is 1 (active) Not Create BOM " . $cs['won'];
+                }else{
+                    $document = getDocumentAvailable($cs['won']);
+                    $cs['_utc_time'] = (!empty($document) ? $document[0]['Document_Folder'] : 'Docment Not Available Now' ); 
+                    $topicTitle = $settings['topicId'][$topicId];
+                    $ticketId = createTicket( 'Auto '.' (' . $topicTitle . ') '. $cs['won'] .' '. $cs['_custpn_revision'] , $msg, $topicId, $cs);
+                    /* Insert In Log Table For Reference */
+                    if ($ticketId) {
+                        generateWOLog($ticketId, $topicId, $cs);
+                    }
                 }
             }
         }
@@ -84,8 +113,8 @@ function getDataFromDB()
 {
 
     $today = date('Y-m-d');
-    $fields = '_wo.WONumber  as won, _wo.UNIQ_KEY as uniq_key, _wo.SaleType as _wo_saletype, _wo.WOStatus as _wo_status, if(_wo.RepeatOrderFlag = \'Repeat\', "Yes", "No") as _repeat_flag, _wo.WorkOrderDate as _wo_create_date, _wo.StartDate as _wo_start_date, _wo.DueDate as _wo_due_date, _wo.ScheduledCompleteDate as _scheduled_complete_date, _wo.PlannedCompleteDate as _wo_complete_planned_date, _wo.ReleaseDate as _release_date, _wo.CompleteDate as _wo_complete_date, _wo.WOQty as _wo_quantity, _wo.WOCompleteQty as _wo_complete_quantity, _wo.WORemainingQty as _wo_balanace_quantity, _wo.Customer as _cus_name, _wo.CustomerPONumber as _cus_po, _mi.ItemPartNo as _cus_pn, _mi.ItemRevision as _cus_pn_rev , CONCAT(_mi.ItemPartNo , " " , _mi.ItemRevision) as _custpn_revision , if(_wo.SaleType = \'Consignmnt\', "Yes", "No") as _is_consigned , if(_wo.TestRequiredFalg = \'Yes\', "Yes", "No") as _test_flag , _wo.Lead_Requirement as _lead_requirement , _wo.Clean_Processing as _clean_processing';
-    $query = sprintf('SELECT %1$s FROM manex_work_orders AS _wo INNER JOIN manex_items AS _mi ON _wo.UNIQ_KEY = _mi.UNIQ_KEY LEFT JOIN _wo_cron_logs AS _log ON _wo.WONumber = _log.wo_number WHERE _wo.SaleType IS NOT NULL AND _log.wo_number IS NULL AND DATE(_wo.WorkOrderDate) = "%2$s" ORDER BY _wo.WONumber DESC', $fields , $today);
+    $fields = '_wo.WONumber  as won, _wo.UNIQ_KEY as uniq_key, _wo.SaleType as _wo_saletype, _wo.WOStatus as _wo_status, if(_wo.RepeatOrderFlag = \'Repeat\', "Yes", "No") as _repeat_flag, _wo.WorkOrderDate as _wo_create_date, _wo.StartDate as _wo_start_date, _wo.DueDate as _wo_due_date, _wo.ScheduledCompleteDate as _scheduled_complete_date, _wo.PlannedCompleteDate as _wo_complete_planned_date, _wo.ReleaseDate as _release_date, _wo.CompleteDate as _wo_complete_date, _wo.WOQty as _wo_quantity, _wo.WOCompleteQty as _wo_complete_quantity, _wo.WORemainingQty as _wo_balanace_quantity, _wo.Customer as _cus_name, _wo.CustomerPONumber as _cus_po, _mi.ItemPartNo as _cus_pn, _mi.ItemRevision as _cus_pn_rev , CONCAT(_mi.ItemPartNo , " " , _mi.ItemRevision) as _custpn_revision , if(_wo.SaleType = \'Consignmnt\', "Yes", "No") as _is_consigned , if(_wo.TestRequiredFlag = \'Test\', "Yes", "No") as _test_flag , _wo.Lead_Requirement as _lead_requirement , _wo.Clean_Processing as _clean_processing , _wo.Turn_Time as _turn_time , _wo.RMAFlagCode as _rma_flag';
+    $query = sprintf('SELECT %1$s FROM manex_work_orders AS _wo INNER JOIN manex_items AS _mi ON _wo.UNIQ_KEY = _mi.UNIQ_KEY LEFT JOIN _wo_cron_logs AS _log ON _wo.WONumber = _log.wo_number WHERE _wo.SaleType IS NOT NULL AND _wo.WoNumber>17959 AND _log.wo_number IS NULL AND DATE(_wo.WorkOrderDate) = "%2$s" ORDER BY _wo.WONumber DESC', $fields , $today);
     $result = executeQuery($query);
     return getDataFromResultSet($result);
 

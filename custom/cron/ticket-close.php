@@ -10,7 +10,7 @@ function deleteTickets()
 
     if (isValidArray($customdata)) {
         foreach ($customdata as $cs) {
-            $updateTicket = updateTicketStatus($cs['wo_number'], $cs['ticket_id']);
+            $updateTicket = updateTicketStatus($cs['wo_number'], $cs['number']);
             if ($updateTicket) { 
                 generateWOLog($cs);
             }
@@ -34,7 +34,7 @@ function setCustomData()
 
 function getDataFromDB($wo_no = '')
 {   
-    $fields = 'l.wo_number, l.ticket_id , m.WOStatus, s.status_id';
+    $fields = 'l.wo_number, l.ticket_id , m.WOStatus, s.status_id , s.number';
     $query = sprintf('select %1$s from _wo_cron_logs l join manex_work_orders m on l.wo_number=m.WONumber join sem_ticket s on l.ticket_id=s.ticket_id
                     where m.WOStatus in ("Closed","Cancel") and s.status_id<3', $fields);
     
@@ -57,7 +57,7 @@ function generateWOLog($data)
 
 function updateTicketStatus ($wo_number, $ticket_id) {
 
-    $query = sprintf('update sem_ticket set status_id=3 where ticket_id=%1$d', $ticket_id);
+    $query = sprintf('update sem_ticket set status_id=3 where number=%1$d', $ticket_id);
     $result = executeQuery($query);
     return $result;
 }
