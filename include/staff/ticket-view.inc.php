@@ -1074,6 +1074,15 @@ $tcount = $ticket->getThreadEntries($types) ? $ticket->getThreadEntries($types)-
     </li>
             <!-- AZ Added On July 02, 2024 -->
 
+      <!-- ANAS Added On Nov 23, 2024 -->
+      <li>
+        <a id="ticketlist-tab" href="#ticketlist">
+        <?php
+            echo sprintf(__('WO Tickets List (<span id="axeattachcount">%d</span>)'), 0); ?>
+        </a>
+        </li>
+            <!-- ANAS Added On Nov 23, 2024 -->
+
 </ul>
 
 <div id="ticket_tabs_container">
@@ -1082,6 +1091,13 @@ $tcount = $ticket->getThreadEntries($types) ? $ticket->getThreadEntries($types)-
     <?php include_once(CUSTOM_INCLUDE_DIR . 'attachments.php'); ?>
 </div>
 <!-- AZ Added On July 02, 2024 -->
+
+<!-- AZ Added On July 02, 2024 -->
+<div id="ticketlist" class="tab_content" style="display:none;">
+    <?php include_once(CUSTOM_INCLUDE_DIR . 'ticketlist.php'); ?>
+</div>
+<!-- AZ Added On July 02, 2024 -->
+
 <div id="ticket_thread" class="tab_content">
 
 <?php
