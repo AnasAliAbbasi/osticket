@@ -32,7 +32,9 @@
                     <th colspan="">Last Updte</th>
                     <th colspan="">Subject</th>
                     <th colspan="">Status</th>
-                    <th colspan="">Assign To</th>
+                    <th colspan="">From</th>
+                    <th colspan="">Assign</th>
+                    
                 </thead>
                 <tbody>
                 <?php
@@ -52,6 +54,8 @@
                         </td>
                         <td> <?php echo $ticket_item['name']; ?> </td>
                         <td> <?php echo $ticket_item['holder_name']; ?> </td>
+                        <td> <?php echo $ticket_item['assignee']; ?> </td>
+                        
                     </tr>
                     <?php } ?>
                 </tbody>

@@ -39,7 +39,8 @@ function getRelatedTickets($wo_number , $thread_id , $arr )
             _st.*, 
             _st.ticket_id AS "ticket_no",
             sts.name, -- Assuming `status_name` is a column in `sem_ticket_status` that you want to retrieve
-            _su.name as "holder_name"
+            _su.name as "holder_name",
+            CONCAT(_ss.firstname , " " , _ss.lastname) as "assignee"
         FROM 
             _wo_cron_logs _wcl
         JOIN 
@@ -51,6 +52,9 @@ function getRelatedTickets($wo_number , $thread_id , $arr )
         JOIN 
             sem_user _su
             ON _su.id = _st.user_id
+        LEFT JOIN 
+            sem_staff _ss
+            ON _ss.staff_id = _st.staff_id
         WHERE 
             _wcl.wo_number = %1$d 
             AND _st.ticket_id != %2$d OR _wcl.part_no like CONCAT("%%", "%3$s" , "%%")  OR _wcl.revision like CONCAT("%%", "%4$s" , "%%") ', $wo_number , $thread_id , (string) $arr[0]['part_no'] ,(string) $arr[0]['revision'] );
