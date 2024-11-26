@@ -20,30 +20,43 @@
     </div>
         <div class="thread-body">
             
-            <h3 style="padding-left: 105px;
-                margin-top: -10px;
-                color: gray;
-                font-family: sans-serif;
-                text-align: left;
-                text-decoration: underline;">Related Ticket List</h3>
+            <h3 style="    text-align: center;
+                font-weight: bold;
+                margin-bottom: 25px;
+                text-decoration: underline;
+                color: gray;">Related Ticket List</h3>
             <div class="ticketlist">
+            <table class="ticket_info custom-data" cellspacing="0" cellpadding="0" width="940" border="0">
+                <thead>
+                    <th colspan="">Ticket No</th>
+                    <th colspan="">Last Updte</th>
+                    <th colspan="">Subject</th>
+                    <th colspan="">Status</th>
+                    <th colspan="">Assign To</th>
+                </thead>
+                <tbody>
                 <?php
-                $a = 1;
-                foreach ($ticket_list as $ticket_item) {
-                    $a++;
-                    $attach_link = $base . '?id='.$ticket_item['ticket_no'];
-                    $topic_name = $settings['topicId'][$ticket_item['topic_id']];
-                ?>
-                    <span class="ticketlist-info">
-                    <a class="no-pjax truncate" style="text-decoration: none;" 
-                            href="<?php echo $attach_link; ?>" 
-                            target="_blank">
-                            <?php echo "[ Auto ".  $topic_name  . "-". $ticket_item['wo_number'] . " " . $ticket_item['part_no'] . " " . $ticket_item['revision'] . " ]" ?>
-                        </a>
-                    </span>
-                <?php
-                }
-                ?>
+                    $a = 1;
+                    foreach ($ticket_list as $ticket_item) {
+                        $a++;
+                        $attach_link = $base . '?id='.$ticket_item['ticket_no'];
+                        $topic_name = $settings['topicId'][$ticket_item['topic_id']];
+                    ?>
+                    <tr>
+                        <td> <a href="<?php echo $attach_link; ?>" target="_blank"> <?php echo $ticket_item['number'] ?> </a>  </td>
+                        <td><?php echo $ticket_item['updated'] ?> </td>
+                        <td>
+                            <a href="<?php echo $attach_link; ?>" target="_blank">
+                              <?php echo "[ Auto ".  $topic_name  . "-". $ticket_item['wo_number'] . " " . $ticket_item['part_no'] . " " . $ticket_item['revision'] . " ]" ?>
+                            </a>
+                        </td>
+                        <td> <?php echo $ticket_item['name']; ?> </td>
+                        <td> <?php echo $ticket_item['holder_name']; ?> </td>
+                    </tr>
+                    <?php } ?>
+                </tbody>
+            </table>
+          
             
             </div>
         </div>

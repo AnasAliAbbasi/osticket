@@ -1076,9 +1076,9 @@ $tcount = $ticket->getThreadEntries($types) ? $ticket->getThreadEntries($types)-
 
       <!-- ANAS Added On Nov 23, 2024 -->
       <li>
-        <a id="ticketlist-tab" href="#ticketlist">
+        <a id="ticket-relations-tab" href="#ticketlist">
         <?php
-            echo sprintf(__('WO Tickets List (<span id="axeattachcount">%d</span>)'), 0); ?>
+            echo sprintf(__('Related Tickets List')); ?>
         </a>
         </li>
             <!-- ANAS Added On Nov 23, 2024 -->
