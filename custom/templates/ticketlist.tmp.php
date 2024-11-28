@@ -1,4 +1,5 @@
 <link rel="stylesheet" href="../custom/css/attachments.css?ver=<?php echo AXEVERSION; ?>" />
+
 <div class="axeaticketlist">
     
     <?php
@@ -20,21 +21,20 @@
     </div>
         <div class="thread-body">
             
-            <h3 style="    text-align: center;
-                font-weight: bold;
-                margin-bottom: 25px;
-                text-decoration: underline;
-                color: gray;">Related Ticket List</h3>
+      
             <div class="ticketlist">
-            <table class="ticket_info custom-data" cellspacing="0" cellpadding="0" width="940" border="0">
+            <table class="list queue tickets font-reg" id="relatedticketlist" cellspacing="1" cellpadding="2" width="1200" border="0">
                 <thead>
-                    <th colspan="">Ticket No</th>
-                    <th colspan="">Last Updte</th>
-                    <th colspan="">Subject</th>
-                    <th colspan="">Status</th>
-                    <th colspan="">From</th>
-                    <th colspan="">Assign</th>
+                    <tr>
+                    <th class="osta_ticket" style="width: 12px; font-size: 14px;">#</th>
+              
+                    <th class="osta_lastupdated" style="width: 100px; font-size: 14px;text-align:center;">Last Update</th>
+                    <th class="osta_subject" style="width: 300px; font-size: 14px;">Subject</th>
+                    <th class="osta_username" style="width: 100px; font-size: 14px;">Status</th>
+                    <th class="osta_username" style="width: 100px; font-size: 14px;">From</th>
+                    <th class="osta_assignee" style="width: 100px; font-size: 14px;">Assign</th>
                     
+            </tr>
                 </thead>
                 <tbody>
                 <?php
@@ -45,8 +45,16 @@
                         $topic_name = $settings['topicId'][$ticket_item['topic_id']];
                     ?>
                     <tr>
-                        <td> <a href="<?php echo $attach_link; ?>" target="_blank"> <?php echo $ticket_item['number'] ?> </a>  </td>
-                        <td><?php echo $ticket_item['updated'] ?> </td>
+                       
+                        <td> 
+                            
+                            <a href="<?php echo $attach_link; ?>" target="_blank">
+                                <?php echo $ticket_item['number'] ?> 
+                            </a>
+                        
+                           
+                             </td>
+                        <td style="text-align:center"><?php echo $ticket_item['updated'] ?> </td>
                         <td>
                             <a href="<?php echo $attach_link; ?>" target="_blank">
                               <?php echo "[ Auto ".  $topic_name  . "-". $ticket_item['wo_number'] . " " . $ticket_item['part_no'] . " " . $ticket_item['revision'] . " ]" ?>
@@ -73,3 +81,10 @@
     <?php
     } ?>
 </div>
+
+<script>
+$(document).ready(function() {
+  $('#relatedticketlist').DataTable();
+});
+
+</script>

@@ -28,6 +28,7 @@ if (osTicket::is_ie())
     <meta http-equiv="cache-control" content="no-cache" />
     <meta http-equiv="pragma" content="no-cache" />
     <meta http-equiv="x-pjax-version" content="<?php echo GIT_VERSION; ?>">
+  
     <title><?php echo Format::htmlchars($title); ?></title>
     <!--[if IE]>
     <style type="text/css">
@@ -52,7 +53,10 @@ if (osTicket::is_ie())
     <link type="text/css" rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/select2.min.css?0375576"/>
     <link type="text/css" rel="stylesheet" href="<?php echo ROOT_PATH; ?>css/rtl.css?0375576"/>
     <link type="text/css" rel="stylesheet" href="<?php echo ROOT_PATH ?>scp/css/translatable.css?0375576"/>
-<!--osta-->
+    <link type="text/css" rel="stylesheet" href="<?php echo ROOT_PATH ?>css/datatable.css?0375576"/>
+   
+
+    <!--osta-->
     <?php
     if($ost && ($headers=$ost->getExtraHeaders())) {
         echo "\n\t".implode("\n\t", $headers)."\n";
