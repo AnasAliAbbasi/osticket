@@ -6,7 +6,7 @@ $settings['topicId'] = array(
     20 => ' WO Form', /* WO Form */
     21 => 'Technical Review', /* Technical Review  */
     22 => 'Material Review Consigned', /* Material Review Consigned*/
-    26 => 'Material Review Turnkey', /* Material Review Turnkey*/
+    26 => 'Turnkey Material Management', /* Material Review Turnkey*/
     23 => 'Test Flag', /* Test Flag */
     24 => 'CS Planning', /* CS Planning */
     25 => 'BOM Load', /* BOM Load */
@@ -125,10 +125,9 @@ function getDataFromDB($wo_no = '')
 	AND _wo.WoNumber>17959
     AND _wo.RMAFlagCode != 1
     AND _wo.WONumber IN
-    ( select wo_number from _wo_cron_logs where WO_Number in ( 	select wonumber from manex_work_order_documents where DATE(UpdatedUTC) = "%2$s") group by wo_number having count(*)=1   ) 
+    ( select wo_number from _wo_cron_logs where WO_Number in ( 	select wonumber from manex_work_order_documents where DATE(UpdatedUTC) = "%2$s") group by wo_number having count(*) <= 2   ) 
     AND DATE(_wd.UpdatedUTC) = "%2$s"
     ORDER BY _wo.WONumber;', $fields , $today);
-
     $result = executeQuery($query);
     return getDataFromResultSet($result);
 
