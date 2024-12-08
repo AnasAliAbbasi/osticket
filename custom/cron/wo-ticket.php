@@ -70,6 +70,7 @@ function processWOTickets($settings, $woticketcondition)
     
     if (isValidArray($customdata)) {
         foreach ($customdata as $cs) {
+            echo "<pre>";print_r($customdata);exit;
             $revision = 'No';
             $topicIds = $woticketcondition[$cs['_wo_saletype']][$cs['_repeat_flag']][$revision];
             foreach ($topicIds as $topicId) {
@@ -84,6 +85,7 @@ function processWOTickets($settings, $woticketcondition)
                             $document = getDocumentAvailable($cs['won']);
                             $cs['_utc_time'] = (!empty($document) ? $document[0]['Document_Folder'] : 'Docment Not Available Now' );
                             $topicTitle = $settings['topicId'][$topicId];
+                            generateTicketCreateLog('Auto '.' (' . $topicTitle . ') '. $cs['won'] .' '. $cs['_custpn_revision'] , $topicId , json_encode($cs));
                             $ticketId = createTicket( 'Auto '.' (' . $topicTitle . ') '. $cs['won'] .' '. $cs['_custpn_revision'] , $msg, $topicId, $cs);
                             /* Insert In Log Table For Reference */
                             if ($ticketId) {
@@ -127,7 +129,7 @@ function getDataFromDB()
 {
 
     $today = date('Y-m-d');
-    $fields = '_wo.WONumber  as won, _wo.UNIQ_KEY as uniq_key, _wo.SaleType as _wo_saletype, _wo.WOStatus as _wo_status, if(_wo.RepeatOrderFlag = \'Repeat\', "Yes", "No") as _repeat_flag, _wo.WorkOrderDate as _wo_create_date, _wo.StartDate as _wo_start_date, _wo.DueDate as _wo_due_date, _wo.ScheduledCompleteDate as _scheduled_complete_date, _wo.PlannedCompleteDate as _wo_complete_planned_date, _wo.ReleaseDate as _release_date, _wo.CompleteDate as _wo_complete_date, _wo.WOQty as _wo_quantity, _wo.WOCompleteQty as _wo_complete_quantity, _wo.WORemainingQty as _wo_balanace_quantity, _wo.Customer as _cus_name, _wo.CustomerPONumber as _cus_po, _mi.ItemPartNo as _cus_pn, _mi.ItemRevision as _cus_pn_rev , CONCAT(_mi.ItemPartNo , " " , _mi.ItemRevision) as _custpn_revision , if(_wo.SaleType = \'Consignmnt\', "Yes", "No") as _is_consigned , if(_wo.TestRequiredFlag = \'Test\', "Yes", "No") as _test_flag , _wo.Lead_Requirement as _lead_requirement , _wo.Clean_Processing as _clean_processing , _wo.Turn_Time as _turn_time , _wo.RMAFlagCode as _rma_flag , _wo.Customer as _company';
+    $fields = '_wo.WONumber  as won, _wo.UNIQ_KEY as uniq_key, _wo.SaleType as _wo_saletype, _wo.WOStatus as _wo_status, if(_wo.RepeatOrderFlag = \'Repeat\', "Yes", "No") as _repeat_flag, DATE_FORMAT(_wo.WorkOrderDate, "%d/%m/%y") as _wo_create_date,  DATE_FORMAT(_wo.StartDate, "%d/%m/%y") as _wo_start_date  ,DATE_FORMAT(_wo.DueDate, "%d/%m/%y")  as _wo_due_date, DATE_FORMAT(_wo.ScheduledCompleteDate, "%d/%m/%y")  as _scheduled_complete_date, DATE_FORMAT(_wo.PlannedCompleteDate, "%d/%m/%y") as _wo_complete_planned_date, DATE_FORMAT(_wo.ReleaseDate, "%d/%m/%y") as _release_date, DATE_FORMAT(_wo.CompleteDate, "%d/%m/%y") as _wo_complete_date, _wo.WOQty as _wo_quantity, _wo.WOCompleteQty as _wo_complete_quantity, _wo.WORemainingQty as _wo_balanace_quantity, _wo.Customer as _cus_name, _wo.CustomerPONumber as _cus_po, _mi.ItemPartNo as _cus_pn, _mi.ItemRevision as _cus_pn_rev , CONCAT(_mi.ItemPartNo , " " , _mi.ItemRevision) as _custpn_revision , if(_wo.SaleType = \'Consignmnt\', "Yes", "No") as _is_consigned , if(_wo.TestRequiredFlag = \'Test\', "Yes", "No") as _test_flag , _wo.Lead_Requirement as _lead_requirement , _wo.Clean_Processing as _clean_processing , _wo.Turn_Time as _turn_time , _wo.RMAFlagCode as _rma_flag , _wo.Customer as _company';
     $query = sprintf('SELECT %1$s FROM manex_work_orders AS _wo INNER JOIN manex_items AS _mi ON _wo.UNIQ_KEY = _mi.UNIQ_KEY LEFT JOIN _wo_cron_logs AS _log ON _wo.WONumber = _log.wo_number WHERE _wo.SaleType IS NOT NULL AND _wo.WoNumber>17959 AND _log.wo_number IS NULL AND DATE(_wo.WorkOrderDate) = "%2$s" ORDER BY _wo.WONumber DESC', $fields , $today);
     $result = executeQuery($query);
     return getDataFromResultSet($result);
@@ -142,6 +144,14 @@ function generateWOLog($ticketId, $topicId, $data)
     /* echo $query; */
     $result = executeQuery($query);
 }
+
+function generateTicketCreateLog($subject, $topicId, $data)
+{
+    $query = sprintf('INSERT INTO `_wo_ticket_create_log` values (NULL, %1$d, %2$d, %3$s)', $subject, $topicId, json_encode($data));
+    /* echo $query; */
+    $result = executeQuery($query);
+}
+
 
 function getDocumentAvailable ($wo_number){
     $fields = '_wd.Document_Folder';
