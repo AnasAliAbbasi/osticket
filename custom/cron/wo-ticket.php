@@ -71,43 +71,48 @@ processWOTickets($settings, $woticketcondition);
 
 function processWOTickets($settings, $woticketcondition)
 {
-    list($subject, $msg, $customdata) = setCustomData();
+    try{
+        list($subject, $msg, $customdata) = setCustomData();
     
-    if (isValidArray($customdata)) {
-        foreach ($customdata as $cs) {
-            
-            $revision = 'No';
-            $company = ($cs['_cus_name'] == 'PACIFIC INSTRUMENTS' ? 'PACIFIC_INSTRUMENTS' : 'Other' );
-            
-            if($cs['_wo_saletype'] == 'Consignmnt' && $cs['_repeat_flag'] == 'Yes'){
-                $topicIds = $woticketcondition[$cs['_wo_saletype']][$cs['_repeat_flag']][$revision][$company];
-            }else{
-                $topicIds = $woticketcondition[$cs['_wo_saletype']][$cs['_repeat_flag']][$revision];
-            }
-
-            foreach ($topicIds as $topicId) {
-                if($topicId == 25 && $cs['_rma_flag'] == 1){
-                    echo "RMA flag is 1 (active) Not Create BOM " . $cs['won'];
+        if (isValidArray($customdata)) {
+            foreach ($customdata as $cs) {
+                
+                $revision = 'No';
+                $company = ($cs['_cus_name'] == 'PACIFIC INSTRUMENTS' ? 'PACIFIC_INSTRUMENTS' : 'Other' );
+                
+                if($cs['_wo_saletype'] == 'Consignmnt' && $cs['_repeat_flag'] == 'Yes'){
+                    $topicIds = $woticketcondition[$cs['_wo_saletype']][$cs['_repeat_flag']][$revision][$company];
                 }else{
-                    $document = getDocumentAvailable($cs['won']);
-                    $cs['_utc_time'] = (!empty($document) ? $document[0]['Document_Folder'] : 'Docment Not Available Now' ); 
-                    $topicTitle = $settings['topicId'][$topicId];
-                    $response = checkAlreadyCreated($topicId , $cs['won']);
-                    if(empty($response)) {
-                        $ticketId = createTicket( 'Auto '.' (' . $topicTitle . ') '. $cs['won'] .' '. $cs['_custpn_revision'] , $msg, $topicId, $cs);
-                        /* Insert In Log Table For Reference */
-                        if ($ticketId) {
-                            generateWOLog($ticketId, $topicId, $cs);
-                        }
+                    $topicIds = $woticketcondition[$cs['_wo_saletype']][$cs['_repeat_flag']][$revision];
+                }
+    
+                foreach ($topicIds as $topicId) {
+                    if($topicId == 25 && $cs['_rma_flag'] == 1){
+                        echo "RMA flag is 1 (active) Not Create BOM " . $cs['won'];
                     }else{
-                        echo "ticket already created with given topic and wo number".$topicId .'-'.$cs['won'].'---';
+                        $document = getDocumentAvailable($cs['won']);
+                        $cs['_utc_time'] = (!empty($document) ? $document[0]['Document_Folder'] : 'Docment Not Available Now' ); 
+                        $topicTitle = $settings['topicId'][$topicId];
+                        $response = checkAlreadyCreated($topicId , $cs['won']);
+                        if(empty($response)) {
+                            $ticketId = createTicket( 'Auto '.' (' . $topicTitle . ') '. $cs['won'] .' '. $cs['_custpn_revision'] , $msg, $topicId, $cs);
+                            /* Insert In Log Table For Reference */
+                            if ($ticketId) {
+                                generateWOLog($ticketId, $topicId, $cs);
+                            }
+                        }else{
+                            echo "ticket already created with given topic and wo number".$topicId .'-'.$cs['won'].'---';
+                        }
                     }
                 }
             }
+        }else{
+            echo "No Work Orders Found";
         }
-    }else{
-        echo "No Work Orders Found";
+    }catch(Exception $e) {
+        echo "ERROR: ". $e;
     }
+    
 }
 
 

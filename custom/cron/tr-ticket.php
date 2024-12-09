@@ -76,29 +76,41 @@ processWOTickets($settings, $woticketcondition);
 
 function processWOTickets($settings, $woticketcondition)
 {
-    list($subject, $msg, $customdata) = setCustomData();
+    try{
+        list($subject, $msg, $customdata) = setCustomData();
 
-    if (isValidArray($customdata)) {
-        foreach ($customdata as $cs) {
-            $revision = 'No';
-            $topicIds = $woticketcondition[$cs['_wo_saletype']][$cs['_repeat_flag']][$revision];
-            foreach ($topicIds as $topicId) {
-                if($topicId == 23 && empty($cs['_wo_test_flag'])){
-                    echo "test flag is empty" . $cs['won'];
-                }else{
-                    $topicTitle = $settings['topicId'][$topicId];
-                    $ticketId = createTicket( 'Auto '.' (' . $topicTitle . ') '. $cs['won'] .' '. $cs['_custpn_revision'] , $msg, $topicId, $cs);
-                    /* Insert In Log Table For Reference */
-                    if ($ticketId) {
-                        generateWOLog($ticketId, $topicId, $cs);
+        if (isValidArray($customdata)) {
+            foreach ($customdata as $cs) {
+                $revision = 'No';
+                $topicIds = $woticketcondition[$cs['_wo_saletype']][$cs['_repeat_flag']][$revision];
+                foreach ($topicIds as $topicId) {
+                    if($topicId == 23 && empty($cs['_wo_test_flag'])){
+                        echo "test flag is empty" . $cs['won'];
+                    }else{
+                        $topicTitle = $settings['topicId'][$topicId];
+                        $response = checkAlreadyCreated($topicId , $cs['won']);
+                        if(empty($response)) {
+                            $ticketId = createTicket( 'Auto '.' (' . $topicTitle . ') '. $cs['won'] .' '. $cs['_custpn_revision'] , $msg, $topicId, $cs);
+                            /* Insert In Log Table For Reference */
+                            if ($ticketId) {
+                                generateWOLog($ticketId, $topicId, $cs);
+                            }
+                        }else{
+                            echo "ticket already created with given topic and wo number".$topicId .'-'.$cs['won'].'---';
+                        }
+                   
                     }
+             
                 }
-         
             }
+        }else{
+            echo "No Work Orders Found";
         }
-    }else{
-        echo "No Work Orders Found";
+    }catch(Exception $e) {
+        echo "ERROR: ". $e;
+
     }
+    
 }
 
 
@@ -112,6 +124,16 @@ function setCustomData()
     return array($subject, $msg, $arr);
 }
 
+function checkAlreadyCreated ($topicId , $wo_number) { 
+    $fields = 'a.ticket_id , a.topic_id , b.object_id ,  b.form_id ,  c.value ';
+    $query = sprintf('select %1$s from sem_ticket a
+                    inner join sem_form_entry b ON a.ticket_id = b.object_id
+                    inner join sem_form_entry_values c ON b.id = c.entry_id
+                    where a.topic_id = "%2$s"
+                    and c.value = "%3$s" ', $fields, $topicId , $wo_number);
+    $result = executeQuery($query);
+    return getDataFromResultSet($result);
+}
 
 function getDataFromDB($wo_no = '')
 {  
