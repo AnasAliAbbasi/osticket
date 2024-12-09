@@ -39,8 +39,13 @@ $woticketcondition = array(
         ),
         'Yes' => array( /* RepeatOrderFlag */
             'No' => array( /* Revision */
-                25,
-                20,
+                'PACIFIC_INSTRUMENTS' => array( /* company */
+                    25,
+                    20,
+                ),
+                'Other' => array(
+                    20
+                )
             ),
         )
     ),
@@ -70,41 +75,33 @@ function processWOTickets($settings, $woticketcondition)
     
     if (isValidArray($customdata)) {
         foreach ($customdata as $cs) {
-            echo "<pre>";print_r($customdata);exit;
+            
             $revision = 'No';
-            $topicIds = $woticketcondition[$cs['_wo_saletype']][$cs['_repeat_flag']][$revision];
+            $company = ($cs['_cus_name'] == 'PACIFIC INSTRUMENTS' ? 'PACIFIC_INSTRUMENTS' : 'Other' );
+            
+            if($cs['_wo_saletype'] == 'Consignmnt' && $cs['_repeat_flag'] == 'Yes'){
+                $topicIds = $woticketcondition[$cs['_wo_saletype']][$cs['_repeat_flag']][$revision][$company];
+            }else{
+                $topicIds = $woticketcondition[$cs['_wo_saletype']][$cs['_repeat_flag']][$revision];
+            }
+
             foreach ($topicIds as $topicId) {
                 if($topicId == 25 && $cs['_rma_flag'] == 1){
                     echo "RMA flag is 1 (active) Not Create BOM " . $cs['won'];
                 }else{
-                    if($topicId == 25 && $cs['_wo_saletype'] == 'Consignmnt'){
-                        if(
-                            $cs['_repeat_flag'] == 'Yes' &&
-                            $cs['_company'] == 'PACIFIC INSTRUMENTS'
-                        ){
-                            $document = getDocumentAvailable($cs['won']);
-                            $cs['_utc_time'] = (!empty($document) ? $document[0]['Document_Folder'] : 'Docment Not Available Now' );
-                            $topicTitle = $settings['topicId'][$topicId];
-                            generateTicketCreateLog('Auto '.' (' . $topicTitle . ') '. $cs['won'] .' '. $cs['_custpn_revision'] , $topicId , json_encode($cs));
-                            $ticketId = createTicket( 'Auto '.' (' . $topicTitle . ') '. $cs['won'] .' '. $cs['_custpn_revision'] , $msg, $topicId, $cs);
-                            /* Insert In Log Table For Reference */
-                            if ($ticketId) {
-                                generateWOLog($ticketId, $topicId, $cs);
-                            }
-                        }else{
-                            echo "Not Creating BOM for other company " . $cs['won'];
-                        }
-                    }else{
-                        $document = getDocumentAvailable($cs['won']);
-                        $cs['_utc_time'] = (!empty($document) ? $document[0]['Document_Folder'] : 'Docment Not Available Now' ); 
-                        $topicTitle = $settings['topicId'][$topicId];
+                    $document = getDocumentAvailable($cs['won']);
+                    $cs['_utc_time'] = (!empty($document) ? $document[0]['Document_Folder'] : 'Docment Not Available Now' ); 
+                    $topicTitle = $settings['topicId'][$topicId];
+                    $response = checkAlreadyCreated($topicId , $cs['won']);
+                    if(empty($response)) {
                         $ticketId = createTicket( 'Auto '.' (' . $topicTitle . ') '. $cs['won'] .' '. $cs['_custpn_revision'] , $msg, $topicId, $cs);
                         /* Insert In Log Table For Reference */
                         if ($ticketId) {
                             generateWOLog($ticketId, $topicId, $cs);
                         }
+                    }else{
+                        echo "ticket already created with given topic and wo number".$topicId .'-'.$cs['won'].'---';
                     }
-                    
                 }
             }
         }
@@ -136,7 +133,16 @@ function getDataFromDB()
 
 }
 
-
+function checkAlreadyCreated ($topicId , $wo_number) { 
+    $fields = 'a.ticket_id , a.topic_id , b.object_id ,  b.form_id ,  c.value ';
+    $query = sprintf('select %1$s from sem_ticket a
+                    inner join sem_form_entry b ON a.ticket_id = b.object_id
+                    inner join sem_form_entry_values c ON b.id = c.entry_id
+                    where a.topic_id = "%2$s"
+                    and c.value = "%3$s" ', $fields, $topicId , $wo_number);
+    $result = executeQuery($query);
+    return getDataFromResultSet($result);
+}
 
 function generateWOLog($ticketId, $topicId, $data)
 {
@@ -144,14 +150,6 @@ function generateWOLog($ticketId, $topicId, $data)
     /* echo $query; */
     $result = executeQuery($query);
 }
-
-function generateTicketCreateLog($subject, $topicId, $data)
-{
-    $query = sprintf('INSERT INTO `_wo_ticket_create_log` values (NULL, %1$d, %2$d, %3$s)', $subject, $topicId, json_encode($data));
-    /* echo $query; */
-    $result = executeQuery($query);
-}
-
 
 function getDocumentAvailable ($wo_number){
     $fields = '_wd.Document_Folder';
