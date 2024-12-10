@@ -6,58 +6,106 @@ showStates();
 
 function showStates()
 {
-    list($totalWorkOrder , $totalWorkOrderWithWithoutCron) = getStates();
+    list($getDisticntWorkOrders , $totalWorkOrderWithWithoutCron) = getStates();
 
-    // Start table for $totalWorkOrder
-    echo "<h2>Total Work Order</h2>";
-    echo "<table border='1' cellpadding='5' cellspacing='0'>";
-    echo "<tr><th>Total Work Orders</th><th>Total Tickets Created </th><th>Total Ticket With Cron</th><th>Total Tickets Without Cron</th></tr>"; // Add table headers as needed
-
-    // Loop through $totalWorkOrder and display each item in a row
-    echo "<tr>";
-    echo "<td>" . htmlspecialchars($totalWorkOrder[0]['TotalWorkOrders']) . "</td>";
-    echo "<td>" . htmlspecialchars($totalWorkOrderWithWithoutCron[0]['TotalTickets']) . "</td>";
-    echo "<td>" . htmlspecialchars($totalWorkOrderWithWithoutCron[0]['TicketsWithCron']) . "</td>";
-    echo "<td>" . htmlspecialchars($totalWorkOrderWithWithoutCron[0]['TicketsWithoutCron']) . "</td>";
-    echo "</tr>";
-
-    echo "</table>";
-
+    // echo "<pre>";print_R($getDisticntWorkOrders);exit;
+   
 
     exit;
 }
 
 function getStates()
 {
+    $moneteringData = [];
+    $totalWorkOrder = getDisticntWorkOrders();
+    $distinctOrder = makeDistinctWO($totalWorkOrder);
 
-    $totalWorkOrder = getTotalWorkOrders();
-    $totalWorkOrderWithWithoutCron = getTotalWorkOrderWithWithoutCron();
-    return array($totalWorkOrder , $totalWorkOrderWithWithoutCron );
+    foreach ($distinctOrder as $orderNo) {
+        $monetringChunk = [];
+        $response = getMoniteringData($orderNo);
+
+        if(!empty($response['work_order'])) {
+            $monetringChunk['work_order_no'] = $response['work_order'][0]['WONumber'];
+            $monetringChunk['wo_count'] = $response['work_order'][0]['wo_count'];
+            $monetringChunk['work_order_date'] = $response['work_order'][0]['WorkOrderDate'];
+        }else{
+            $monetringChunk['work_order_no'] = $orderNo;
+            $monetringChunk['wo_count'] = '';
+            $monetringChunk['work_order_date'] = '';
+        }
+
+        if(!empty($response['work_order_docs'])){
+            $monetringChunk['work_order_document'] = $response['work_order_docs'][0]['Document_Folder'];
+        }else{
+            $monetringChunk['work_order_document'] = '';
+        }
+        array_push($moneteringData , $monetringChunk);
+    }
+    
+
+    echo "<pre>";print_R($moneteringData);exit;
+
+
+    // return array($totalWorkOrder , $totalWorkOrderWithWithoutCron );
 }
 
 
-function getTotalWorkOrders()
+function makeDistinctWO ($totalWorkOrder) {
+    $distinctOrder = array();
+    foreach ($totalWorkOrder as $key => $value) {
+        $distinctOrder[] = $value['WONumber'];
+    }
+    return array_unique($distinctOrder);
+}
+
+function getDisticntWorkOrders()
 {   
-    $today = date('Y-m-d');
-    $fields = 'COUNT(a.WONumber) AS TotalWorkOrders' ;
-    $query = sprintf('SELECT %1$s FROM manex_work_orders a WHERE 
-        a.WorkOrderDate = "%2$s"', $fields , $today);
+    $today = new DateTime('2024-12-10'); 
+    $today->modify('-7 days');
+    $previousDateMinusSevenDays = $today->format('Y-m-d');  
+
+    $query = sprintf('select a.`WONumber` as WONumber
+                from manex_work_orders a 
+                where DATE(a.`WorkOrderDate`) > "%1$s"
+
+                UNION ALL
+
+                select b.WONumber as WONumber
+                from manex_work_order_documents b 
+                where DATE(b.`UpdatedUTC`) > "%1$s"
+
+                UNION ALL
+
+                select a.wo_number as WONumber
+                from _wo_cron_logs a 
+                where DATE(a.`cron_date`) > "%1$s"
+
+                UNION ALL
+
+                select DISTINCT b.value as WONumber
+                from sem_form_entry a 
+                inner join sem_form_entry_values b ON a.id = b.entry_id
+                inner join sem_form_field c ON a.form_id = 12
+                where DATE(a.created) > "%1$s"
+                and b.field_id = 76', $previousDateMinusSevenDays);
     $result = executeQuery($query);
     return getDataFromResultSet($result);
 }
 
-function getTotalWorkOrderWithWithoutCron()
+function getMoniteringData($orderNo)
 {   
-    $today = date('Y-m-d');
-    $fields = 'COUNT(DISTINCT c.number) AS TotalTickets, 
-    SUM(CASE WHEN b.cron_date IS NOT NULL THEN 1 ELSE 0 END) AS TicketsWithCron,
-    SUM(CASE WHEN b.cron_date IS NULL THEN 1 ELSE 0 END) AS TicketsWithoutCron' ;
+    $dataSequence = [];
 
-    $query = sprintf('SELECT %1$s FROM manex_work_orders a LEFT JOIN 
-    _wo_cron_logs b ON a.WONumber = b.wo_number INNER JOIN 
-    sem_ticket c ON c.number = CONCAT("00", b.ticket_id) WHERE a.WorkOrderDate = "%2$s" ', $fields , $today);
-    $result = executeQuery($query);
-    return getDataFromResultSet($result);
+    $work_order = sprintf('select count(*) as "wo_count" , a.WONumber , a.WorkOrderDate from manex_work_orders a where a.WONumber = "%1$s" ',  $orderNo);
+    $work_order = executeQuery($work_order);
+    $dataSequence['work_order'] = getDataFromResultSet($work_order);
+
+    $work_order_docs = sprintf('select a.Document_Folder from manex_work_order_documents a where a.WONumber = "%1$s" ',  $orderNo);
+    $work_order_docs = executeQuery($work_order_docs);
+    $dataSequence['work_order_docs'] = getDataFromResultSet($work_order_docs);
+
+    return $dataSequence;
+
 }
 
 
