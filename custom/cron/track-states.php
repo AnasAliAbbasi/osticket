@@ -2,16 +2,10 @@
 
 include_once '../includes/functions.php';
 
-showStates();
-
 function showStates()
 {
-    list($getDisticntWorkOrders , $totalWorkOrderWithWithoutCron) = getStates();
-
-    // echo "<pre>";print_R($getDisticntWorkOrders);exit;
-   
-
-    exit;
+    list($moneteringData) = getStates();
+    return $moneteringData;
 }
 
 function getStates()
@@ -56,17 +50,16 @@ function getStates()
             $monetringChunk['work_order_ticket_without_cron'] = $response['work_order_ticket_without_cron'][0]['TicketsWithoutCron'];
             
         }else{
-            $monetringChunk['work_order_form_data_count'] = 0;
+            $monetringChunk['work_order_all_ticket'] = 0;
+            $monetringChunk['work_order_ticket_with_cron'] = 0;
+            $monetringChunk['work_order_ticket_without_cron'] = 0;
+            
         }
 
         array_push($moneteringData , $monetringChunk);
     }
-    
 
-    echo "<pre>";print_R($moneteringData);exit;
-
-
-    // return array($totalWorkOrder , $totalWorkOrderWithWithoutCron );
+    return array($moneteringData);
 }
 
 
@@ -129,9 +122,9 @@ function getMoniteringData($orderNo)
     $dataSequence['work_order_form_data'] = getDataFromResultSet($work_order_form_data);
 
     $work_order_ticket_without_cron = sprintf('SELECT 
-            COUNT(DISTINCT c.number) AS TotalTickets, 
-            SUM(CASE WHEN b.cron_date IS NOT NULL THEN 1 ELSE 0 END) AS TicketsWithCron,
-            SUM(CASE WHEN b.cron_date IS NULL THEN 1 ELSE 0 END) AS TicketsWithoutCron
+        COUNT(DISTINCT c.number) AS TotalTickets, 
+        COALESCE(SUM(CASE WHEN b.cron_date IS NOT NULL THEN 1 ELSE 0 END), 0) AS TicketsWithCron,
+        COALESCE(SUM(CASE WHEN b.cron_date IS NULL THEN 1 ELSE 0 END), 0) AS TicketsWithoutCron
             FROM 
                 manex_work_orders a
             LEFT JOIN 
@@ -148,7 +141,120 @@ function getMoniteringData($orderNo)
 
 }
 
+?>
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bootstrap demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+    <style>
+        /* Center the loader within the table */
+      /* Loader Styles */
+            .loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999; /* Ensure it stays on top */
+            }
+
+            .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            }
+
+            /* Animation for spinning effect */
+            @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+            }
+
+    </style>
+</head>
+  <body>
+    
+    <div class="row mt-5">
+        <div class="col-md-12">
+            <h3 style="text-align:center;">Work Order States</h3>
+        </div>
+    </div>
+
+    <!-- Loader Element -->
+    <div id="loader" class="loader">
+        <div class="spinner"></div>
+    </div>
 
 
+    <div class="row mt-5">
+        <div class="col-md-12">
+        <table class="table table-striped table-bordered" cellspacing="0" width="100%" id="wo-states">
+            <thead>
+                <tr>
+                <th scope="col">#</th>
+                <th scope="col">WO No</th>
+                <th scope="col">WO Count</th>
+                <th scope="col">WO Date</th>
+                <th scope="col">WO Doc</th>
+                <th scope="col">WO Doc Date</th>
+                <th scope="col">WO AllTickets</th>
+                <th scope="col">WO WithCronTickets</th>
+                <th scope="col">WO WithoutCronTickets</th>
+                <th scope="col">WO FormData Count</th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php $monetringStates = showStates(); ?>
+                <?php $a = 1; foreach ($monetringStates as $index => $states){ ?>
+
+                    <tr>
+                        <th scope="row"><?php echo $a++; ?></th>
+                        <td><?php echo $states['work_order_no']; ?></td>
+                        <td><?php echo $states['wo_count']; ?></td>
+                        <td><?php echo $states['work_order_date']; ?></td>
+                        <td><?php echo $states['work_order_document']; ?></td>
+                        <td><?php echo $states['work_order_document_date']; ?></td>
+                        <td><?php echo $states['work_order_all_ticket']; ?></td>
+                        <td><?php echo $states['work_order_ticket_with_cron']; ?></td>
+                        <td><?php echo $states['work_order_ticket_without_cron']; ?></td>
+                        <td><?php echo $states['work_order_form_data_count']; ?></td>
+                    </tr>
+                <?php } ?>
+            </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <script>
+        $('#showLoader').on('click', function() {
+            $('#loader').fadeOut('slow');   
+            $('#content').fadeIn('slow');  
+        });
+
+        $(document).ready(function() {
+            $('#wo-states').DataTable();
+        });
+    </script>
+
+
+
+</body>
+</html>
 
 
