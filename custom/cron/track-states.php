@@ -190,9 +190,10 @@ function getMoniteringData($orderNo)
     
     <div class="row mt-5">
         <div class="col-md-12">
-            <h3 style="text-align:center;">Work Order States</h3>
+            <h3 style="text-align:center;text-decoration:underline;">Work Order States</h3>
         </div>
     </div>
+    <hr />
 
     <!-- Loader Element -->
     <div id="loader" class="loader">
@@ -209,12 +210,12 @@ function getMoniteringData($orderNo)
                 <th scope="col">WO No</th>
                 <th scope="col">WO Count</th>
                 <th scope="col">WO Date</th>
-                <th scope="col">WO Doc</th>
-                <th scope="col">WO Doc Date</th>
-                <th scope="col">WO AllTickets</th>
-                <th scope="col">WO WithCronTickets</th>
-                <th scope="col">WO WithoutCronTickets</th>
-                <th scope="col">WO FormData Count</th>
+                <th scope="col" width="100px">WO Doc</th>
+                <th scope="col">Doc Date</th>
+                <th scope="col">AllTickets</th>
+                <th scope="col">WithCronTickets</th>
+                <th scope="col">WithoutCronTickets</th>
+                <th scope="col">Form Data</th>
                 </tr>
             </thead>
             <tbody>
@@ -242,15 +243,26 @@ function getMoniteringData($orderNo)
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
     <script>
-        $('#showLoader').on('click', function() {
-            $('#loader').fadeOut('slow');   
-            $('#content').fadeIn('slow');  
+
+    $(document).ready(function () {
+        // Show the content and hide the loader after the page fully loads
+        $("#loader").fadeOut(500, function () {
+            $("#spinner").fadeIn(500);
         });
 
+        // Show loader when the page is refreshed
+        $(window).on('beforeunload', function () {
+            $("#loader").fadeIn(500);
+            $("#spinner").fadeOut(500);
+        });
         $(document).ready(function() {
             $('#wo-states').DataTable();
         });
+    });
     </script>
+
+
+
 
 
 
