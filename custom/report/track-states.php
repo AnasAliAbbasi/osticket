@@ -29,12 +29,12 @@ function getStates()
         }
 
         if(!empty($response['work_order_docs'])){
-            $monetringChunk['work_order_document'] = $response['work_order_docs'][0]['Document_Folder'];
+            $monetringChunk['work_order_document'] = 'Yes';
             $monetringChunk['work_order_document_date'] = $response['work_order_docs'][0]['UpdatedUTC'];
             
         }else{
-            $monetringChunk['work_order_document'] = '';
-            $monetringChunk['work_order_document_date'] = '';
+            $monetringChunk['work_order_document'] = 'No';
+            $monetringChunk['work_order_document_date'] = '00-00-00';
 
         }
 
