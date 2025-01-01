@@ -218,6 +218,8 @@ class AdminNav extends StaffNav{
             $tabs['manage']=array('desc'=>__('Manage'),'href'=>'helptopics.php','title'=>__('Manage Options'));
             $tabs['emails']=array('desc'=>__('Emails'),'href'=>'emails.php','title'=>__('Email Settings'));
             $tabs['staff']=array('desc'=>__('Agents'),'href'=>'staff.php','title'=>__('Manage Agents'));
+            $tabs['report']=array('desc'=>__('Report'),'href'=>'../custom/report/track-states.php','title'=>__('Manage Reports'));
+            
             if (!is_null($this->getRegisteredApps()))
                 $tabs['apps']=array('desc'=>__('Applications'),'href'=>'apps.php','title'=>__('Applications'));
             $this->tabs=$tabs;
@@ -259,6 +261,10 @@ class AdminNav extends StaffNav{
                     $subnav[]=array('desc'=>__('Forms'),'href'=>'forms.php','iconclass'=>'forms');
                     $subnav[]=array('desc'=>__('Lists'),'href'=>'lists.php','iconclass'=>'lists');
                     $subnav[]=array('desc'=>__('Plugins'),'href'=>'plugins.php','iconclass'=>'api');
+                    break;
+                case 'report':
+                    $subnav[]=array('desc'=>__('WO States Report'),'href'=>'../custom/report/track-states.php', 'target' => '_blank', 'iconclass'=>'helpTopics');
+                    $subnav[]=array('desc'=>__('Open Tickets Report'),'href'=>'../custom/report/open-tickets.php', 'target' => '_blank' ,'iconclass'=>'helpTopics');
                     break;
                 case 'emails':
                     $subnav[]=array('desc'=>__('Emails'),'href'=>'emails.php', 'title'=>__('Email Addresses'), 'iconclass'=>'emailSettings');

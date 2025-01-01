@@ -2,62 +2,69 @@
 
 include_once '../includes/functions.php';
 
-function showStates()
+$days = 3;
+if(isset($_POST['days'])) {
+    $days = $_POST['days'];
+}
+
+function showStates($days)
 {
-    list($moneteringData) = getStates();
+    list($moneteringData) = getStates($days);
     return $moneteringData;
 }
 
-function getStates()
+function getStates($days)
 {
     $moneteringData = [];
-    $totalWorkOrder = getDisticntWorkOrders();
+    $totalWorkOrder = getDisticntWorkOrders($days);
     $distinctOrder = makeDistinctWO($totalWorkOrder);
 
-    foreach ($distinctOrder as $orderNo) {
-        $monetringChunk = [];
-        $response = getMoniteringData($orderNo);
-
-        if(!empty($response['work_order'])) {
-            $monetringChunk['work_order_no'] = $response['work_order'][0]['WONumber'];
-            $monetringChunk['wo_count'] = $response['work_order'][0]['wo_count'];
-            $monetringChunk['work_order_date'] = $response['work_order'][0]['WorkOrderDate'];
-        }else{
-            $monetringChunk['work_order_no'] = $orderNo;
-            $monetringChunk['wo_count'] = '';
-            $monetringChunk['work_order_date'] = '';
+    if(!empty($distinctOrder)){
+        foreach ($distinctOrder as $orderNo) {
+            $monetringChunk = [];
+            $response = getMoniteringData($orderNo);
+    
+            if(!empty($response['work_order'])) {
+                $monetringChunk['work_order_no'] = $response['work_order'][0]['WONumber'];
+                $monetringChunk['wo_count'] = $response['work_order'][0]['wo_count'];
+                $monetringChunk['work_order_date'] = $response['work_order'][0]['WorkOrderDate'];
+            }else{
+                $monetringChunk['work_order_no'] = $orderNo;
+                $monetringChunk['wo_count'] = '';
+                $monetringChunk['work_order_date'] = '';
+            }
+    
+            if(!empty($response['work_order_docs'])){
+                $monetringChunk['work_order_document'] = 'Yes';
+                $monetringChunk['work_order_document_date'] = $response['work_order_docs'][0]['UpdatedUTC'];
+                
+            }else{
+                $monetringChunk['work_order_document'] = 'No';
+                $monetringChunk['work_order_document_date'] = '00-00-00';
+    
+            }
+    
+            if(!empty($response['work_order_form_data'])){
+                $monetringChunk['work_order_form_data_count'] = $response['work_order_form_data'][0]['form_data_count'];
+            }else{
+                $monetringChunk['work_order_form_data_count'] = 0;
+            }
+    
+            if(!empty($response['work_order_and_other_ticket_count'])){
+                $monetringChunk['work_order_ticket_count'] = $response['work_order_and_other_ticket_count'][0]['wo_ticket_count'];
+                $monetringChunk['other_ticket_count'] = $response['work_order_and_other_ticket_count'][0]['other_wo_ticket_count'];
+                
+            }else{
+                $monetringChunk['work_order_all_ticket'] = 0;
+                $monetringChunk['work_order_ticket_with_cron'] = 0;
+                $monetringChunk['work_order_ticket_without_cron'] = 0;
+                
+            }
+    
+            array_push($moneteringData , $monetringChunk);
         }
-
-        if(!empty($response['work_order_docs'])){
-            $monetringChunk['work_order_document'] = 'Yes';
-            $monetringChunk['work_order_document_date'] = $response['work_order_docs'][0]['UpdatedUTC'];
-            
-        }else{
-            $monetringChunk['work_order_document'] = 'No';
-            $monetringChunk['work_order_document_date'] = '00-00-00';
-
-        }
-
-        if(!empty($response['work_order_form_data'])){
-            $monetringChunk['work_order_form_data_count'] = $response['work_order_form_data'][0]['form_data_count'];
-        }else{
-            $monetringChunk['work_order_form_data_count'] = 0;
-        }
-
-        if(!empty($response['work_order_ticket_without_cron'])){
-            $monetringChunk['work_order_all_ticket'] = $response['work_order_ticket_without_cron'][0]['TotalTickets'];
-            $monetringChunk['work_order_ticket_with_cron'] = $response['work_order_ticket_without_cron'][0]['TicketsWithCron'];
-            $monetringChunk['work_order_ticket_without_cron'] = $response['work_order_ticket_without_cron'][0]['TicketsWithoutCron'];
-            
-        }else{
-            $monetringChunk['work_order_all_ticket'] = 0;
-            $monetringChunk['work_order_ticket_with_cron'] = 0;
-            $monetringChunk['work_order_ticket_without_cron'] = 0;
-            
-        }
-
-        array_push($moneteringData , $monetringChunk);
     }
+
 
     return array($moneteringData);
 }
@@ -65,33 +72,37 @@ function getStates()
 
 function makeDistinctWO ($totalWorkOrder) {
     $distinctOrder = array();
-    foreach ($totalWorkOrder as $key => $value) {
-        $distinctOrder[] = $value['WONumber'];
+    if(!empty($totalWorkOrder)){
+        foreach ($totalWorkOrder as $key => $value) {
+            $distinctOrder[] = $value['WONumber'];
+        }
     }
+   
     return array_unique($distinctOrder);
 }
 
-function getDisticntWorkOrders()
-{   
-    $today = new DateTime('2024-12-10'); 
-    $today->modify('-7 days');
+function getDisticntWorkOrders($days)
+{  
+    $today = new DateTime(date('Y-m-d')); 
+    // $today = new DateTime('2024-12-12'); 
+    $today->modify('-'.$days.' days');
     $previousDateMinusSevenDays = $today->format('Y-m-d');  
 
     $query = sprintf('select a.`WONumber` as WONumber
                 from manex_work_orders a 
-                where DATE(a.`WorkOrderDate`) > "%1$s"
+                where DATE(a.`WorkOrderDate`) > "%1$s" and WONumber > 17959
 
                 UNION ALL
 
                 select b.WONumber as WONumber
                 from manex_work_order_documents b 
-                where DATE(b.`UpdatedUTC`) > "%1$s"
+                where DATE(b.`UpdatedUTC`) > "%1$s" and b.WONumber > 17959
 
                 UNION ALL
 
                 select a.wo_number as WONumber
                 from _wo_cron_logs a 
-                where DATE(a.`cron_date`) > "%1$s"
+                where DATE(a.`cron_date`) > "%1$s" and a.wo_number > 17959
 
                 UNION ALL
 
@@ -121,21 +132,14 @@ function getMoniteringData($orderNo)
     $work_order_form_data = executeQuery($work_order_form_data);
     $dataSequence['work_order_form_data'] = getDataFromResultSet($work_order_form_data);
 
-    $work_order_ticket_without_cron = sprintf('SELECT 
-        COUNT(DISTINCT c.number) AS TotalTickets, 
-        COALESCE(SUM(CASE WHEN b.cron_date IS NOT NULL THEN 1 ELSE 0 END), 0) AS TicketsWithCron,
-        COALESCE(SUM(CASE WHEN b.cron_date IS NULL THEN 1 ELSE 0 END), 0) AS TicketsWithoutCron
-            FROM 
-                manex_work_orders a
-            LEFT JOIN 
-                _wo_cron_logs b ON a.WONumber = b.wo_number
-            INNER JOIN 
-                sem_ticket c ON c.number = CONCAT("00", b.ticket_id)
-            WHERE 
-                a.WONumber = "%1$s" ',  $orderNo);
+    $work_order_ticket_without_cron = sprintf('SELECT
+        COUNT(CASE WHEN a.topic_id = 20 THEN 1 END) AS wo_ticket_count,
+        COUNT(CASE WHEN a.topic_id != 20 THEN 1 END) AS other_wo_ticket_count
+        FROM _wo_cron_logs a
+        WHERE a.wo_number = "%1$s"',  $orderNo);
                 
     $work_order_ticket_without_cron = executeQuery($work_order_ticket_without_cron);
-    $dataSequence['work_order_ticket_without_cron'] = getDataFromResultSet($work_order_ticket_without_cron);
+    $dataSequence['work_order_and_other_ticket_count'] = getDataFromResultSet($work_order_ticket_without_cron);
 
     return $dataSequence;
 
@@ -193,48 +197,77 @@ function getMoniteringData($orderNo)
             <h3 style="text-align:center;text-decoration:underline;">Work Order States</h3>
         </div>
     </div>
-    <hr />
+   
 
     <!-- Loader Element -->
     <div id="loader" class="loader">
         <div class="spinner"></div>
     </div>
 
+    <div class="row">
+        <div class="col-md-1"></div>
+        <div class="col-md-4">
+            <h6>Filter</h6>
+            <form action="track-states.php" method="post">
+                <select name="days" id="" class="form-control">
+                    <option value="7">7 Days</option>
+                    <option value="6">6 Days</option>
+                    <option value="5">5 Days</option>
+                    <option value="4">4 Days</option>
+                    <option value="3">3 Days</option>
+                </select>
 
+        
+        </div>
+        <div class="col-md-2 mt-4">
+            <button style="margin-top: 3px;" type="submit" name="submit" class="btn btn-primary">Apply</button>
+        </div>
+        </form>
+    </div>
+
+    <div class="row mt-3 mb-3">
+        <div class="col-md-12">
+            <h3>Report Days : <?php echo $days.' Days'; ?></h3>
+        </div>
+    </div>
+
+    <hr />
     <div class="row mt-5">
         <div class="col-md-12">
         <table class="table table-striped table-bordered" cellspacing="0" width="100%" id="wo-states">
             <thead>
                 <tr>
                 <th scope="col">#</th>
-                <th scope="col">WO No</th>
-                <th scope="col">WO Count</th>
-                <th scope="col">WO Date</th>
-                <th scope="col" width="100px">WO Doc</th>
-                <th scope="col">Doc Date</th>
-                <th scope="col">AllTickets</th>
-                <th scope="col">WithCronTickets</th>
-                <th scope="col">WithoutCronTickets</th>
-                <th scope="col">Form Data</th>
+                <th scope="col">WO Number</th>
+                <th scope="col">Manex WO Count</th>
+                <th scope="col">Manex WO Date</th>
+                <th scope="col">Log WO Ticket Count</th>
+                <th scope="col">Manex WO Doc</th>
+                <th scope="col">Manex WO Date</th>
+                <th scope="col">Log WO Other Ticket Count</th>
+               <th scope="col">WO Form Data Count</th>
                 </tr>
             </thead>
             <tbody>
-            <?php $monetringStates = showStates(); ?>
-                <?php $a = 1; foreach ($monetringStates as $index => $states){ ?>
+            <?php $monetringStates = showStates($days); ?>
+                <?php $a = 1; if(!empty($monetringStates)){
+                     foreach ($monetringStates as $index => $states){ ?>
 
                     <tr>
                         <th scope="row"><?php echo $a++; ?></th>
                         <td><?php echo $states['work_order_no']; ?></td>
                         <td><?php echo $states['wo_count']; ?></td>
                         <td><?php echo $states['work_order_date']; ?></td>
+                        <td><?php echo $states['work_order_ticket_count']; ?></td>
                         <td><?php echo $states['work_order_document']; ?></td>
-                        <td><?php echo $states['work_order_document_date']; ?></td>
-                        <td><?php echo $states['work_order_all_ticket']; ?></td>
-                        <td><?php echo $states['work_order_ticket_with_cron']; ?></td>
-                        <td><?php echo $states['work_order_ticket_without_cron']; ?></td>
+                        <td><?php echo $states['work_order_date']; ?></td>
+                        <td><?php echo $states['other_ticket_count']; ?></td>
                         <td><?php echo $states['work_order_form_data_count']; ?></td>
                     </tr>
-                <?php } ?>
+                <?php }
+            }else{
+                echo "<h3 style='color:red;'>NO Logs Found</h3>";
+            } ?>
             </tbody>
             </table>
         </div>
@@ -255,9 +288,7 @@ function getMoniteringData($orderNo)
             $("#loader").fadeIn(500);
             $("#spinner").fadeOut(500);
         });
-        $(document).ready(function() {
-            $('#wo-states').DataTable();
-        });
+      
     });
     </script>
 

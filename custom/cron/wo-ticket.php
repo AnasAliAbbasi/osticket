@@ -86,9 +86,12 @@ function processWOTickets($settings, $woticketcondition)
                     $topicIds = $woticketcondition[$cs['_wo_saletype']][$cs['_repeat_flag']][$revision];
                 }
     
+                
                 foreach ($topicIds as $topicId) {
                     if($topicId == 25 && $cs['_rma_flag'] == 1){
                         echo "RMA flag is 1 (active) Not Create BOM " . $cs['won'];
+                        addEntryInFailedTickets('rma_flag', 'rma' , json_encode($cs) , $cs['won']);
+
                     }else{
                         $document = getDocumentAvailable($cs['won']);
                         $cs['_utc_time'] = (!empty($document) ? $document[0]['Document_Folder'] : 'Docment Not Available Now' ); 
@@ -101,6 +104,7 @@ function processWOTickets($settings, $woticketcondition)
                                 generateWOLog($ticketId, $topicId, $cs);
                             }
                         }else{
+                            addEntryInFailedTickets('duplicate', 'duplicate' , json_encode($cs) , $cs['won']);
                             echo "ticket already created with given topic and wo number".$topicId .'-'.$cs['won'].'---';
                         }
                     }
@@ -110,13 +114,11 @@ function processWOTickets($settings, $woticketcondition)
             echo "No Work Orders Found";
         }
     }catch(Exception $e) {
+        addEntryInFailedTickets($e->getMessage(), 'error' , json_encode($cs) , $cs['won']);
         echo "ERROR: ". $e;
     }
     
 }
-
-
-
 
 function setCustomData()
 {
@@ -156,9 +158,20 @@ function generateWOLog($ticketId, $topicId, $data)
     $result = executeQuery($query);
 }
 
+
+function addEntryInFailedTickets($error , $type , $data , $won){
+    $query = sprintf('INSERT INTO `failed_tickets` values (NULL, \'%1$s\', \'%2$s\', \'%3$s\', \'%4$s\', UTC_TIMESTAMP())', $error , $type, $data, $won);
+    /* echo $query; */
+    $result = executeQuery($query);
+}
+
 function getDocumentAvailable ($wo_number){
     $fields = '_wd.Document_Folder';
     $query = sprintf('select %1$s from manex_work_order_documents _wd where _wd.WONumber = '.$wo_number.' limit 1', $fields);
     $result = executeQuery($query);
     return getDataFromResultSet($result);
 }
+
+
+
+
