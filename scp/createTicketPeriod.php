@@ -39,7 +39,7 @@ $settings = array(
   'reporterEmail' => 'pmo@sem-inc.com',
   'reporterName' => 'Ahmar',
   'apiURL' => 'http://127.0.0.1/osticket/api/http.php/tickets.json',
-  'apiKey' => '2831A4D4D5D15408AB0C6375D3ECD25B'
+  'apiKey' => '932BD5DE3BE85537F5BBF8528AD02BFC'
 );
 
 if (!isset($settings)) {
