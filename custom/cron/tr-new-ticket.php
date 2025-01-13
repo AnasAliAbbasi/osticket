@@ -2,9 +2,12 @@
 
 include_once '../includes/functions.php';
 $settings['topicId'] = array(
-    15 => 'MPI Ticket', /* MPI Ticket */
-    20 => ' WO Form', /* WO Form */
-    21 => 'Technical Review', /* Technical Review  */
+    15 => 'MPI PK', /* MPI Ticket */
+    30 => 'MPI US', /* MPI Ticket */
+    20 => 'WO Form', /* WO Form */
+    21 => 'Valor Processing', /* Technical Review  */
+    29 => 'SMT Program', /* MPI Ticket */
+    28 => 'Stencil', /* MPI Ticket */
     22 => 'Material Review Consigned', /* Material Review Consigned*/
     26 => 'Turnkey Material Management', /* Material Review Turnkey*/
     23 => 'Test Flag', /* Test Flag */
@@ -21,7 +24,9 @@ $woticketcondition = array(
                 26,
                 23,
                 15,
-                30
+                30,
+                29,
+                28
             ),
             'Yes' => array( /* Revision */
                 // 20,
@@ -29,7 +34,9 @@ $woticketcondition = array(
                 26,
                 23,
                 15,
-                30
+                30,
+                29,
+                28
             )
         ),
         'Yes' => array( /* RepeatOrderFlag */
@@ -39,7 +46,9 @@ $woticketcondition = array(
                 26,
                 23,
                 15,
-                30
+                30,
+                29,
+                28
             ),
         )
     )
@@ -52,7 +61,9 @@ $woticketcondition = array(
                 21,
                 15,
                 22,
-                30
+                30,
+                29,
+                28
             ),
             'Yes' => array( /* Revision */
                 // 20,
@@ -60,7 +71,9 @@ $woticketcondition = array(
                 15,
                 23,
                 22,
-                30
+                30,
+                29,
+                28
                 
             )
         ),
@@ -71,7 +84,9 @@ $woticketcondition = array(
                 15,
                 21,
                 22,
-                30
+                30,
+                29,
+                28
             ),
         )
     )
@@ -150,9 +165,14 @@ function getDataFromDB($wo_no = '')
             INNER JOIN manex_work_order_documents AS _wd ON _wo.WONumber = _wd.WONumber
             INNER JOIN _wo_cron_logs AS b ON _wo.WONumber = b.wo_number
             INNER JOIN sem_ticket AS c ON b.topic_id = c.topic_id
+            Inner Join sem_form_entry d ON c.ticket_id = d.object_id
+            INNER JOIN sem_form_entry_values e ON d.id = e.entry_id
             WHERE _wo.WONumber > 17959 
             and c.topic_id = 27 
-            AND c.status_id = 3;', $fields , $today);
+            AND c.status_id = 3
+            AND d.form_id = 30
+            AND e.field_id = '298'
+            AND e.value = "Yes"; ', $fields , $today);
 
     $result = executeQuery($query);
     return getDataFromResultSet($result);
